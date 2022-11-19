@@ -1,0 +1,124 @@
+---
+title: "tnum_615"
+output: html_document
+date: "2022-11-10"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Tnum set up
+
+```{r}
+library(tnum)
+tnum.loadLibs() 
+tnum.authorize(ip = "mssp.truenum.com:8080", creds = "yiryuan@bu.edu:leopard")
+```
+
+## Query Weena
+
+```{r}
+
+ch8_weena <- data.frame(tnum.query("subj:Time_Machine:Chapter:8:* and stringval:Weena"))
+ch10_weena <- data.frame(tnum.query("subj:Time_Machine:Chapter:10:* and stringval:Weena"))
+ch11_weena <- data.frame(tnum.query("subj:Time_Machine:Chapter:11:* and stringval:Weena"))
+ch12_weena <- data.frame(tnum.query("subj:Time_Machine:Chapter:12:* and stringval:Weena"))
+all_weena <- data.frame(tnum.query("subj:Time_Machine:* and stringval:Weena"))
+```
+## Plot Wenna
+
+
+```{r}
+weena<-rbind(ch8_weena,ch10_weena,ch11_weena,ch12_weena,all_weena)
+tnum.graphTnumList(weena)
+```
+```{r}
+library(dplyr)
+library(tidytext) 
+library(ggplot2)
+text<-c(weena$value)
+df <- tibble(text)
+
+s1<-df %>%
+  unnest_tokens(word, text)
+
+s2 <- s1 %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(word, sentiment, sort = TRUE) %>%
+  ungroup()
+
+s2 %>%
+  group_by(sentiment) %>%
+  slice_max(n, n = 5) %>% 
+  ungroup() %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(n, word, fill = sentiment)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~sentiment, scales = "free_y") +
+  labs(x = "Contribution to sentiment",
+       y = NULL)
+
+```
+
+
+## The word "Weena" shows in chapters 8 - 12. The Time Machine has 15 Chapters, so "Weena" appears in the later half of the book. "Weena" first appears in chapter 8 and we can know that "Weena" is a woman in chapter 8. "Weena" often shows in the later part, so she is an important character in the 8-12 chapters. The sentiment analysis displays the positive word "well" and the negative word "tired" always goes along with  "Weena".
+
+##Query Psychologist
+```{r}
+ch1_Psy <- data.frame(tnum.query("subj:Time_Machine:Chapter:1:* and stringval:Psychologist"))
+ch2_Psy <- data.frame(tnum.query("subj:Time_Machine:Chapter:2:* and stringval:Psychologist"))
+
+```
+
+##Plot Psy
+```{r}
+psy<-rbind(ch1_Psy,ch2_Psy)
+tnum.graphTnumList(psy)
+```
+## The word "Psychologist" only appears in Chapters 1 & 2. The "Psychologist" 5 times in Chapter 1 and 11 times in Chapter "Psychologist" appears more times in Chapter 2 than in Chapter 1. The "Psychologist" plays a vital role at the beginning of The Time Machine. By querying the values which contain the word "Psychologist", we can find psychologist test the existence of time traveler. 
+
+
+##Query Terror
+```{r}
+ch7_terror <- data.frame(tnum.query("subj:Time_Machine:Chapter:7:* and stringval:terror"))
+ch8_terror <- data.frame(tnum.query("subj:Time_Machine:Chapter:8:* and stringval:terror"))
+ch9_terror <- data.frame(tnum.query("subj:Time_Machine:Chapter:9:* and stringval:terror"))
+ch10_terror <- data.frame(tnum.query("subj:Time_Machine:Chapter:10:* and stringval:terror"))
+all_terror <- data.frame(tnum.query("subj:Time_Machine:* and stringval:terror"))
+
+```
+
+```{r}
+terror<-rbind(ch7_terror,ch8_terror,ch9_terror,ch10_terror,all_terror)
+tnum.graphTnumList(terror)
+```
+##The "word" terror shows in chapters 7-10, 13 and it only appears one or two times in these chapters. Obviously, the word "terror" is low frequency word in The Time Machine and the book is not about terror. 
+
+```{r}
+library(dplyr)
+library(magrittr)
+```
+
+
+```{r}
+l1<-tnum.query("subj:New_Hampshire* and prop:median_household_income and numval:<50000")
+mapply(FUN = tnum.addTag,
+       guid = l1$id,
+       tag = "county:poor1",
+       text = "the poorest counties in New Hampshire")
+l2<-tnum.query("subj:Maine* and prop:median_household_income and numval:<50000")
+mapply(FUN = tnum.addTag,
+       guid = l2$id,
+       tag = "county:poor1",
+       text = "the poor counties in Maine")
+l3<-tnum.query("county:poor1")
+df1<- data.frame(l3)
+df1$tag<-rep("county:poor1",6)
+df1 %<>% select(tag,subject,wrapper,value)
+kable(df1)
+
+
+```
+
+
